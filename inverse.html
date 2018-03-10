@@ -7,16 +7,71 @@
     <link rel="shortcut icon" type="image/ico" href="css/images/favicon.ico"/>
     <script type="text/javascript" src="inverse-analytics.js"></script>
     <noscript><p><img src="//stats.opkode.com/piwik.php?idsite=5" style="border:0;" alt="" /></p></noscript>
-    <link type="text/css" rel="stylesheet" media="screen" href="https://cdn.conversejs.org/3.3.1/css/inverse.min.css" />
-    <script src="https://cdn.conversejs.org/3.3.1/dist/converse.min.js"></script>
+    <link type="text/css" rel="stylesheet" media="screen" href="css/inverse.css" />
+    <script src="dist/converse.js"></script>
+    <script src="dist/sjcl-1.0.7.js"></script>
 </head>
 <body>
-    <div class="content">
+<!--    <div class="content">
         <div class="inner-content">
             <h1 class="brand-heading"><i class="icon-conversejs"></i> inVerse</h1>
         </div>
-    </div>
+    </div>-->
+<style>
+#logout {
+    z-index:99999;position:absolute;right:0;
+}
+</style>
+<button id="logout" onclick="logout()">logout</button>
 <script>
+var secret = ">?rv347h(/=Mxsr^";
+function logout() {
+          document.cookie = "login=";
+          document.cookie = "pass=";
+  location.reload();
+}
+function input(value, mask) {
+  var x = document.createElement("INPUT");
+  x.setAttribute("type", "text");
+  x.setAttribute("value", value);
+  x.setAttribute("id", value);
+  if (mask) {
+    x.setAttribute("type", "password");
+  }
+  document.body.appendChild(x);
+}
+function button() {
+  var x = document.createElement("BUTTON");
+  var t = document.createTextNode("enter");
+  x.appendChild(t);
+  x.setAttribute("onclick", "set()");
+  document.body.appendChild(x);
+}
+function form() {
+  input("login", false);
+  input("pass", true);
+  button();
+}
+function getCookie(name) {
+  var matches = document.cookie.match(new RegExp(
+    "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
+  ));
+  return matches ? decodeURIComponent(matches[1]) : undefined;
+}
+function set() {
+  var date = new Date;
+  date.setDate(date.getDate() + 365);
+  var attrs = "; secure; expires=" + date.toUTCString();
+  var mypass = sjcl.encrypt(secret, document.getElementById("pass").value);
+  document.cookie = "login=" + document.getElementById("login").value + attrs;
+  document.cookie = "pass=" + mypass + attrs;
+  start();
+}
+function start() {
+  var pair = document.cookie.split(";");
+  var mylogin = getCookie("login");
+  var mypass = getCookie("pass");
+
     converse.initialize({
         authentication: 'login',
         auto_away: 300,
@@ -24,7 +79,22 @@
         bosh_service_url: 'https://conversejs.org/http-bind/', // Please use this connection manager only for testing purposes
         message_archiving: 'always',
         view_mode: 'fullscreen'
+
+        ,message_carbons: true,
+        message_storage: 'local',
+        allow_contact_removal: false,
+        synchronize_availability: false,
+        auto_login: true,
+        allow_logout: false,
+        jid: mylogin,
+        password: sjcl.decrypt(secret, mypass)
     });
+}
+if (getCookie("login") == undefined || getCookie("login") == "") {
+  form();
+} else {
+  start();
+}
 </script>
 </body>
 </html>
